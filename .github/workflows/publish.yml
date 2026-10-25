@@ -58,10 +58,17 @@ jobs:
           Expand-Archive ncnn.zip -DestinationPath .
           Get-ChildItem "ncnn-$tag-windows-vs2022" | Select-Object -First 5
 
-      - name: 校验 Vulkan SDK（runner 预装）
+      - name: 安装 Vulkan SDK
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          vulkan_version: 1.4.363.0   # 与本地开发版本一致
+          install_runtime: true
+          cache: true
+
+      - name: 校验 Vulkan SDK
         shell: pwsh
         run: |
-          if (-not $env:VULKAN_SDK) { throw "runner 缺少 VULKAN_SDK 环境变量" }
+          if (-not $env:VULKAN_SDK) { throw "VULKAN_SDK 未设置（SDK 安装失败？）" }
           if (-not (Test-Path "$env:VULKAN_SDK\Lib\vulkan-1.lib")) { throw "$env:VULKAN_SDK\Lib\vulkan-1.lib 缺失" }
           Write-Host "VULKAN_SDK = $env:VULKAN_SDK"
 
