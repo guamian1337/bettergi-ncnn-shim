@@ -11,6 +11,6 @@ if not exist "%SPIKE_DIR%\ncnn_shim.dll" (
 )
 
 copy /y "%SPIKE_DIR%\ncnn_shim.dll" "%DIST%\ncnn_shim.dll" >nul
-dotnet pack "%~dp0pack\BetterGI.NcnnShim.csproj" -c Release -o "%ART%" --nologo
+dotnet pack "%~dp0pack\Guamian.BetterGI.NcnnShim.csproj" -c Release -o "%ART%" --nologo
 if errorlevel 1 exit /b 1
 echo [完成] 原生包已输出到 %ART%

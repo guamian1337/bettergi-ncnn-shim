@@ -10,7 +10,7 @@
   -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <PackageId>BetterGI.NcnnShim</PackageId>
+    <PackageId>Guamian.BetterGI.NcnnShim</PackageId>
     <Version>0.1.0</Version>
     <Authors>bettergi-ncnn-shim</Authors>
     <Description>BetterGI ncnn Vulkan 胶水层原生库（C ABI shim，静态链接 ncnn + glslang + SPIRV）</Description>

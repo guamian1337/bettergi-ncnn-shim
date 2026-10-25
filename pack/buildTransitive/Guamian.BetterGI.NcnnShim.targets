@@ -1,6 +1,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- 还原后把原生 shim dll 拷贝到主工程输出目录的 ncnn 运行库位置 -->
-  <Target Name="BetterGINcnnShimDeploy"
+  <Target Name="GuamianBetterGINcnnShimDeploy"
           AfterTargets="Build"
           Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <PropertyGroup>
