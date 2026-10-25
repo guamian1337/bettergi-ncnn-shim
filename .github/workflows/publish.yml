@@ -1,0 +1,85 @@
+# 发布 ncnn_shim 原生包到 nuget.org（Trusted Publishing，无需 API Key）
+#
+# 前置一次性配置（nuget.org）：
+#   包管理页 → Trusted Publishing → Add：
+#     Owner       = nuget.org 用户名
+#     Repository  = <GitHub 用户名>/<仓库名>
+#     Workflow    = publish.yml
+#     Environment = nuget-org（与下方 jobs.environment 一致，或在两侧同时去掉）
+#
+# 触发：
+#   - 推送 tag：git tag v0.1.1 && git push origin v0.1.1   （版本取 tag）
+#   - 手动：Actions 页 workflow_dispatch 填 version
+name: publish
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '包版本号（如 0.1.1）；tag 触发时忽略'
+        required: false
+        default: ''
+
+permissions:
+  id-token: write   # Trusted Publishing：OIDC 短期凭据
+  contents: read
+
+env:
+  # ncnn 官方预编译库版本（Tencent/ncnn releases 的 tag 名）
+  NCNN_VERSION: '20261020'
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    environment: nuget-org
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 确定包版本号
+        id: ver
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 准备 MSVC 环境（cl）
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: 下载 ncnn 预编译库
+        shell: pwsh
+        run: |
+          $tag = '${{ env.NCNN_VERSION }}'
+          Invoke-WebRequest "https://github.com/Tencent/ncnn/releases/download/$tag/ncnn-$tag-windows-vs2022.zip" -OutFile ncnn.zip
+          Expand-Archive ncnn.zip -DestinationPath .
+          Get-ChildItem "ncnn-$tag-windows-vs2022" | Select-Object -First 5
+
+      - name: 编译 ncnn_shim.dll
+        shell: cmd
+        run: |
+          mkdir dist\win-x64 2>nul
+          cl /nologo /utf-8 /O2 /MD /LD /EHsc /Zi ^
+            /I ncnn-${{ env.NCNN_VERSION }}-windows-vs2022\x64\include ^
+            /I ncnn-${{ env.NCNN_VERSION }}-windows-vs2022\x64\include\ncnn ^
+            ncnn_shim.cpp ^
+            /link /DEBUG /LIBPATH:ncnn-${{ env.NCNN_VERSION }}-windows-vs2022\x64\lib ^
+            ncnn.lib glslang.lib SPIRV.lib OSDependent.lib MachineIndependent.lib GenericCodeGen.lib ^
+            glslang-default-resource-limits.lib vulkan-1.lib ^
+            /OUT:dist\win-x64\ncnn_shim.dll
+
+      - name: 打包（注入版本号）
+        shell: bash
+        run: dotnet pack pack/Guamian.BetterGI.NcnnShim.csproj -c Release -o artifacts -p:Version=${{ steps.ver.outputs.version }} --nologo
+
+      # Trusted Publishing：OIDC 换取短期凭据（无需 API Key）
+      - name: NuGet 登录（Trusted Publishing）
+        uses: NuGet/login@v1
+        id: login
+
+      - name: 推送到 nuget.org
+        shell: bash
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json
