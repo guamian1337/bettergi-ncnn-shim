@@ -1,0 +1,18 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- 还原后把原生 shim dll 拷贝到主工程输出目录的 ncnn 运行库位置 -->
+  <Target Name="BetterGINcnnShimDeploy"
+          AfterTargets="Build"
+          Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <PropertyGroup>
+      <_BgiNcnnShimSource>$(MSBuildThisFileDirectory)..\runtimes\win-x64\native\ncnn_shim.dll</_BgiNcnnShimSource>
+      <_BgiNcnnShimDest>$(OutDir)Assets\Model\PaddleOCR\Ncnn\</_BgiNcnnShimDest>
+    </PropertyGroup>
+    <Copy SourceFiles="$(_BgiNcnnShimSource)"
+          DestinationFiles="$(_BgiNcnnShimDest)ncnn_shim.dll"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(_BgiNcnnShimSource)')" />
+    <Message Importance="high"
+             Text="[NcnnShim] 已部署 ncnn_shim.dll -> $(_BgiNcnnShimDest)"
+             Condition="Exists('$(_BgiNcnnShimSource)')" />
+  </Target>
+</Project>

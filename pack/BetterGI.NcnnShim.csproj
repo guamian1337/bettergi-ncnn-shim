@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    原生包打包工程：把 build_shim.bat 产出的 ncnn_shim.dll 打成原生 NuGet 包。
+    用法：
+      1) copy-dll.bat（或手动）把最新 ncnn_shim.dll 放到 dist/win-x64/
+      2) dotnet pack pack/BetterGI.NcnnShim.csproj -c Release -o artifacts
+    主仓库以目录源引用 artifacts，还原后 targets 会把 dll 拷贝到
+    $(OutDir)Assets\Model\PaddleOCR\Ncnn\ncnn_shim.dll（NcnnAvailability.ShimRelativePath 的加载位置）。
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>BetterGI.NcnnShim</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>bettergi-ncnn-shim</Authors>
+    <Description>BetterGI ncnn Vulkan 胶水层原生库（C ABI shim，静态链接 ncnn + glslang + SPIRV）</Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoBuild>true</NoBuild>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DevelopmentDependency>false</DevelopmentDependency>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\dist\win-x64\ncnn_shim.dll" Pack="true" PackagePath="runtimes/win-x64/native/" Condition="Exists('..\dist\win-x64\ncnn_shim.dll')" />
+    <None Include="buildTransitive\**\*.targets" Pack="true" PackagePath="buildTransitive/" />
+  </ItemGroup>
+
+</Project>
