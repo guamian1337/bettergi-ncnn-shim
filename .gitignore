@@ -1,0 +1,14 @@
+# 构建产物
+bin/
+obj/
+*.dll
+*.lib
+*.pdb
+*.exp
+
+# 对拍临时样本
+*.bin
+!sample_*.bin
+
+# Python
+__pycache__/
