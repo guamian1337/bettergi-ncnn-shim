@@ -94,6 +94,8 @@ jobs:
       - name: NuGet 登录（Trusted Publishing）
         uses: NuGet/login@v1
         id: login
+        with:
+          user: guamian
 
       - name: 推送到 nuget.org
         shell: bash
