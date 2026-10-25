@@ -43,22 +43,22 @@ pack_local.bat
 
 构建产物已在 `dist/win-x64/` → `dotnet pack` → `artifacts/`。
 主仓库 `nuget.config` 已配置 `..\bettergi-ncnn-shim\artifacts` 为目录源，
-主工程构建时自动把 dll 部署到 `bin\...\Assets\Model\PaddleOCR\Ncnn\`。
+还原时 NuGet 把包内 `runtimes/win-x64/native/ncnn_shim.dll` 复制到输出目录同名标准位置。
 
 ### 正式发布（Trusted Publishing，无 API Key）
 
 1. nuget.org 包页 → Trusted Publishing 政策：Owner（nuget.org 用户名）、
    GitHub 仓库、Workflow = `publish.yml`、Environment = `nuget-org`；
 2. 提升版本号（`pack/Guamian.BetterGI.NcnnShim.csproj` 的 `<Version>`）；
-3. `git tag v0.1.1 && git push origin v0.1.1` —— CI 自动构建、打包、推送。
+3. `git tag v0.1.2 && git push origin v0.1.2` —— CI 自动构建、打包、推送。
 
 > 版本一经发布不可覆盖，每次发布必须递增。
 
 ## 主仓库集成
 
 `BetterGenshinImpact.csproj` 引用 `Guamian.BetterGI.NcnnShim`；
-还原后包内 `buildTransitive/Guamian.BetterGI.NcnnShim.targets` 在构建时把 dll
-部署到 `$(OutDir)Assets\Model\PaddleOCR\Ncnn\`（即 `NcnnAvailability.ShimRelativePath` 的加载位置）。
+dll 按 NuGet 原生包标准布局落盘 `runtimes/win-x64/native/`（单文件发布时自动扁平化到 exe 旁），
+C# 侧 `NcnnShim` 以裸名标准解析加载（`NativeLibrary.TryLoad("ncnn_shim", assembly)`），无路径代码。
 运行库缺失时 ncnn 后端抛 `NcnnUnavailableException`，不影响 ONNX 路径。
 
 ## 模型转换（convert_model.py）
