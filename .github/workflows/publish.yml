@@ -58,6 +58,13 @@ jobs:
           Expand-Archive ncnn.zip -DestinationPath .
           Get-ChildItem "ncnn-$tag-windows-vs2022" | Select-Object -First 5
 
+      - name: 校验 Vulkan SDK（runner 预装）
+        shell: pwsh
+        run: |
+          if (-not $env:VULKAN_SDK) { throw "runner 缺少 VULKAN_SDK 环境变量" }
+          if (-not (Test-Path "$env:VULKAN_SDK\Lib\vulkan-1.lib")) { throw "$env:VULKAN_SDK\Lib\vulkan-1.lib 缺失" }
+          Write-Host "VULKAN_SDK = $env:VULKAN_SDK"
+
       - name: 编译 ncnn_shim.dll
         shell: cmd
         run: |
@@ -67,6 +74,7 @@ jobs:
             /I ncnn-${{ env.NCNN_VERSION }}-windows-vs2022\x64\include\ncnn ^
             ncnn_shim.cpp ^
             /link /DEBUG /LIBPATH:ncnn-${{ env.NCNN_VERSION }}-windows-vs2022\x64\lib ^
+            /LIBPATH:"%VULKAN_SDK%\Lib" ^
             ncnn.lib glslang.lib SPIRV.lib OSDependent.lib MachineIndependent.lib GenericCodeGen.lib ^
             glslang-default-resource-limits.lib vulkan-1.lib ^
             /OUT:dist\win-x64\ncnn_shim.dll

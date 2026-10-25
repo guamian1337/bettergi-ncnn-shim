@@ -16,12 +16,22 @@ C# 侧互操作契约见主仓库 `BetterGenshinImpact/Core/Recognition/Ncnn/INc
 
 ## 本地构建
 
-1. 下载 [ncnn releases](https://github.com/Tencent/ncnn/releases) 的 windows-vs2022 x64 完整包（含 Vulkan），
-   解压到 `D:\bgiprro\ncnn-spike\`（与 build 脚本内路径一致，版本需与
-   `.github/workflows/publish.yml` 的 `NCNN_VERSION` 相同）；
-2. 把 `ncnn_shim.cpp` 复制到该目录，运行 `build_shim.bat` 得到 `ncnn_shim.dll`。
+前置三项：
 
-> 注意：vulkan-1.lib 不在 Windows SDK 内，脚本用 dumpbin 从 `System32\vulkan-1.dll` 生成导入库。
+1. **Visual Studio 2022+**（含 C++ 桌面开发负载；脚本经 vswhere 自动定位）；
+2. **LunarG Vulkan SDK**：<https://vulkan.lunarg.com/sdk/home> —— 提供官方 `vulkan-1.lib`，
+   安装后 `VULKAN_SDK` 环境变量自动设置（CI 的 Windows runner 已预装）；
+3. **ncnn 预编译库**：[ncnn releases](https://github.com/Tencent/ncnn/releases) 的
+   windows-vs2022 x64 完整包（含 Vulkan），解压到 `D:\bgiprro\ncnn-spike\`
+   （版本需与 `.github/workflows/publish.yml` 的 `NCNN_VERSION` 相同）。
+
+然后：
+
+```bat
+build_shim.bat          :: 缺省用 D:\bgiprro\ncnn-spike，或传参 build_shim.bat <ncnn库目录>
+```
+
+产物：`dist/win-x64/ncnn_shim.dll`（+ pdb，供 VTune/WinDbg 符号化）。无需手工复制任何文件。
 
 ## 打包与发布
 
@@ -31,7 +41,7 @@ C# 侧互操作契约见主仓库 `BetterGenshinImpact/Core/Recognition/Ncnn/INc
 pack_local.bat
 ```
 
-从 `ncnn-spike` 构建目录取最新 dll → `dist/win-x64/` → `dotnet pack` → `artifacts/`。
+构建产物已在 `dist/win-x64/` → `dotnet pack` → `artifacts/`。
 主仓库 `nuget.config` 已配置 `..\bettergi-ncnn-shim\artifacts` 为目录源，
 主工程构建时自动把 dll 部署到 `bin\...\Assets\Model\PaddleOCR\Ncnn\`。
 
