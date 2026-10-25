@@ -61,8 +61,10 @@ python convert_model.py <模型>\xxx.onnx --skip-deploy   :: 只验证不部署
 流程：元数据检查 → 拓扑排序 → fp16→fp32 → checker → pnnx → 层型检查 → 数值对拍（vs ORT）→ 部署。
 依赖 `onnx onnxruntime numpy` 与本机 `pnnx.exe`、`yolo_check.exe`（`--pnnx`/`--yolo-check` 可覆盖路径）。
 
-> OCR 动态模型：pnnx 不支持动态宽度折叠，det/rec 用 `inputshape` 指定真实形状转换
-> （det 为正方形画布；rec 单宽度动态模型见主仓库 `NcnnRec`）。
+> OCR 动态模型（det_dyn/rec_dyn）用 pnnx **双具体形状**转换：
+> `inputshape=[1,3,48,320] inputshape2=[1,3,48,960]`（rec 宽度动态同理），不要写 `-1` 维度。
+> det 虽然全动态转换，但生产固定**正方形**画布——ncnn Vulkan 对非方形动态输入存在引擎缺陷
+> （非方形输出错乱，CPU 正确），详见主仓库 `NcnnDet`/`NcnnRec`。
 > 字典与 ONNX 路线必须同源，逐字一致。
 
 ## C API 概览
